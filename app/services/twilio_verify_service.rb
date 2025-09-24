@@ -10,7 +10,7 @@ class TwilioVerifyService
   end
 
   def self.verify_totp_token(user, token)
-    updated_factor = new.entities([Rails.env, user.id].join('-'))
+    updated_factor = new.twilio_verify_service.entities([Rails.env, user.id].join('-'))
                         .factors(user.twilio_totp_factor_sid)
                         .update(auth_payload: token)
 
