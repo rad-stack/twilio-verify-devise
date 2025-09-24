@@ -10,10 +10,19 @@ class TwilioVerifyService
   end
 
   def self.verify_totp_token(user, token)
-    new.twilio_verify_service_v2
-      .entities([Rails.env, user.id].join('-'))
-      .challenges
-      .create(auth_payload: token, factor_sid: user.twilio_totp_factor_sid)
+    updated_factor = new.entities([Rails.env, user.id].join('-'))
+                        .factors(user.twilio_totp_factor_sid)
+                        .update(auth_payload: token)
+
+    if updated_factor.status == 'verified'
+      user.update!(twilio_totp_verified: true)
+      return true
+    end
+
+    false
+  rescue StandardError => e
+    Sentry.capture_exception(e)
+    false
   end
 
   def self.setup_totp_service(user)
